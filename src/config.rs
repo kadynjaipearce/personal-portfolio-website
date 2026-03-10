@@ -23,13 +23,13 @@ pub struct Config {
 impl Config {
     pub fn from_env() -> Self {
         Self {
-            host: env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_string()),
+            host: env::var("HOST").unwrap_or_else(|_| "0.0.0.0".to_string()),
             port: env::var("PORT")
                 .unwrap_or_else(|_| "8080".to_string())
                 .parse()
                 .expect("PORT must be a number"),
             database_url: env::var("DATABASE_URL")
-                .unwrap_or_else(|_| "file://data/portfolio.db".to_string()),
+                .unwrap_or_else(|_| "file:///app/data/portfolio.db".to_string()),
             database_ns: env::var("DATABASE_NS").unwrap_or_else(|_| "portfolio".to_string()),
             database_db: env::var("DATABASE_DB").unwrap_or_else(|_| "main".to_string()),
             github_client_id: env::var("GITHUB_CLIENT_ID").unwrap_or_default(),
