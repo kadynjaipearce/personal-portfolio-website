@@ -1,34 +1,28 @@
+# Build using Debian 11 (Bullseye) for compatibility with Fly.io
 FROM debian:bullseye-slim AS builder
 
-# Install Rust
-RUN apt-get update && apt-get install -y curl pkg-config libssl-dev libclang-dev cmake build-essential && \
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.75.0 && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-ENV PATH="/root/.cargo/bin:${PATH}"
-ENV RUSTFLAGS="-C target-feature=+crt-static"
-
-# Build for Debian Bullseye (compatible with Fly.io)
-RUN rustup target add x86_64-unknown-linux-gnu
-
-WORKDIR /app
-
-# Install dependencies
+# Install build dependencies and Rust
 RUN apt-get update && apt-get install -y \
+    curl \
     pkg-config \
     libssl-dev \
     libclang-dev \
     cmake \
     build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.75.0 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy all source code
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+WORKDIR /app
+
+# Copy source code
 COPY . .
 
 # Build the application
-RUN rm -f Cargo.lock && cargo build --release --target x86_64-unknown-linux-gnu
+RUN cargo build --release
 
-# Runtime image
+# Runtime image - Debian 11 Bullseye  
 FROM debian:bullseye-slim
 
 # Install runtime dependencies
@@ -43,7 +37,7 @@ WORKDIR /app
 RUN useradd -m -u 1000 portfolio
 
 # Copy the compiled binary
-COPY --from=builder /app/target/x86_64-unknown-linux-gnu/release/portfolio /app/portfolio
+COPY --from=builder /app/target/release/portfolio /app/portfolio
 
 # Copy the templates and static files
 COPY --from=builder /app/templates /app/templates
