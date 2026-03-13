@@ -1,68 +1,48 @@
-# Build stage
-FROM rust:latest AS builder
+# Build stage - use exact same Debian version as runtime
+FROM debian:bookworm-slim AS builder
 
-WORKDIR /app
-
-# Install dependencies for SurrealDB
 RUN apt-get update && apt-get install -y \
+    curl \
+    pkg-config \
+    libssl-dev \
     libclang-dev \
     cmake \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Copy manifests
-COPY Cargo.toml Cargo.lock ./
-
-# Create dummy main.rs for dependency caching
-RUN mkdir -p src && echo "fn main() {}" > src/main.rs
-
-# Build dependencies (this layer will be cached)
-RUN cargo build --release && rm -rf src
-
-# Copy actual source code
-COPY src ./src
-COPY templates ./templates
-COPY static ./static
-
-# Touch main.rs to trigger rebuild
-RUN touch src/main.rs
-
-# Build the application
-RUN cargo build --release
-
-# Runtime stage
-FROM debian:bookworm-slim
+ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /app
+COPY . .
 
-# Install runtime dependencies
+RUN cargo build --release
+
+# Runtime stage - use exact same Debian version
+FROM debian:bookworm-slim
+
 RUN apt-get update && apt-get install -y \
     ca-certificates \
     libssl3 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create non-root user
+WORKDIR /app
+
 RUN useradd -m -u 1000 portfolio
 
-# Copy the binary
 COPY --from=builder /app/target/release/portfolio /app/portfolio
+COPY --from=builder /app/templates /app/templates
+COPY --from=builder /app/static /app/static
 
-# Copy templates and static files
-COPY --from=builder /app/templates ./templates
-COPY --from=builder /app/static ./static
-
-# Create data directory for SurrealDB
 RUN mkdir -p /app/data && chown -R portfolio:portfolio /app
 
 USER portfolio
 
-# Expose port
 EXPOSE 8080
 
-# Set environment variables
 ENV HOST=0.0.0.0
 ENV PORT=8080
 ENV RUST_LOG=info
-ENV DATABASE_URL=file://data/portfolio.db
+ENV DATABASE_URL=file:///app/data/portfolio.db
 
-# Run the application
 CMD ["./portfolio"]
