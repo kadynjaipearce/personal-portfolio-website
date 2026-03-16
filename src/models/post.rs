@@ -70,6 +70,18 @@ impl Post {
         Ok(rows)
     }
 
+    pub async fn published_page(limit: i64, offset: i64) -> AppResult<Vec<Self>> {
+        let pool = get_pool();
+        let rows = sqlx::query_as::<_, Self>(
+            "SELECT id, title, slug, excerpt, content, tags, published, reading_time, created_at, updated_at FROM posts WHERE published = true ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+        )
+        .bind(limit)
+        .bind(offset)
+        .fetch_all(pool)
+        .await?;
+        Ok(rows)
+    }
+
     pub async fn by_tag(tag: &str) -> AppResult<Vec<Self>> {
         let pool = get_pool();
         let rows = sqlx::query_as::<_, Self>(

@@ -25,7 +25,7 @@
                     {% elif project.project_type == 'ml' %}bg-blue-100 text-blue-700
                     {% elif project.project_type == 'embedded' %}bg-orange-100 text-orange-700
                     {% elif project.project_type == 'graphics' %}bg-pink-100 text-pink-700
-                    {% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {% else %}bg-surface-subtle text-ink-muted{% endif %}">
                     {{ project.project_type }}
                 </span>
                 {% if project.company %}
@@ -52,7 +52,7 @@
 
         <!-- Tags -->
         {% if project.tags | length > 0 %}
-        <div class="mb-12 p-6 bg-gray-50 rounded-xl">
+        <div class="mb-12 p-6 bg-surface-subtle rounded-xl">
             <h3 class="text-sm font-semibold text-secondary uppercase tracking-wider mb-4">Tech Stack</h3>
             <div class="flex flex-wrap gap-2">
                 {% for tag in project.tags %}
@@ -73,7 +73,7 @@
                     prose-ul:text-secondary prose-ol:text-secondary
                     prose-li:my-1
                     prose-code:text-sm prose-code:font-mono
-                    prose-pre:bg-[#1a1a1a] prose-pre:text-gray-200">
+                    prose-pre:bg-[#1a1a1a] prose-pre:text-surface-subtle">
             {{ content_html | safe }}
         </div>
 

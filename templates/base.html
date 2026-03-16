@@ -90,10 +90,11 @@
                 linear-gradient(to bottom, #E5E7EB 1px, transparent 1px);
             background-size: 40px 40px;
             background-position: 0 0;
-            transition: background-position 600ms cubic-bezier(0.25, 1, 0.5, 1);
+            transition: background-position 600ms cubic-bezier(0.25, 1, 0.5, 1), transform 400ms ease-out;
         }
         .grid-bg:hover {
             background-position: 6px 6px;
+            transform: translate3d(0, -2px, 0);
         }
         
         /* Typing cursor – respect reduced motion */

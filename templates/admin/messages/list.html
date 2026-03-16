@@ -5,7 +5,7 @@
 {% block content %}
 <div class="bg-white rounded-xl border border-grid overflow-hidden">
     <table class="w-full">
-        <thead class="bg-gray-50 border-b border-grid">
+        <thead class="bg-surface-subtle border-b border-grid">
             <tr>
                 <th class="px-6 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">From</th>
                 <th class="px-6 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">Subject</th>
@@ -15,7 +15,7 @@
         </thead>
         <tbody class="divide-y divide-grid">
             {% for msg in messages %}
-            <tr class="hover:bg-gray-50 {% if not msg.read %}bg-accent/5{% endif %}">
+            <tr class="hover:bg-surface-subtle {% if not msg.read %}bg-accent/5{% endif %}">
                 <td class="px-6 py-4">
                     <div class="flex items-center gap-2">
                         {% if not msg.read %}

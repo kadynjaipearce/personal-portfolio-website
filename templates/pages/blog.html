@@ -17,42 +17,80 @@
         <!-- Posts List -->
         <div class="space-y-8">
             {% for post in posts %}
-            <article class="group pb-8 border-b border-grid last:border-0">
-                <div class="flex items-center gap-3 text-sm text-secondary mb-3">
-                    <span class="font-mono">{{ post.reading_time }} min read</span>
-                    <span class="w-1 h-1 rounded-full bg-secondary"></span>
-                    {% if post.created_at %}
-                    <time>{{ post.created_at }}</time>
-                    {% endif %}
-                </div>
-                
-                <h2 class="text-xl md:text-2xl font-semibold mb-3 group-hover:text-accent transition-colors">
-                    <a href="/blog/{{ post.slug }}">{{ post.title }}</a>
-                </h2>
-                
-                <p class="text-secondary mb-4">{{ post.excerpt }}</p>
-                
-                <div class="flex flex-wrap items-center gap-4">
-                    <div class="flex flex-wrap gap-2">
-                        {% for tag in post.tags %}
-                        <a href="/blog?tag={{ tag }}" 
-                           class="px-2 py-1 text-xs font-medium text-accent bg-accent/10 rounded hover:bg-accent/20 transition-colors">
-                            {{ tag }}
-                        </a>
-                        {% endfor %}
+                {% if loop.index0 == 0 %}
+                <!-- Hero post -->
+                <article class="group border border-grid rounded-2xl p-6 md:p-8 bg-surface-subtle hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300">
+                    <div class="flex items-center gap-3 text-sm text-secondary mb-3">
+                        <span class="font-mono">{{ post.reading_time }} min read</span>
+                        <span class="w-1 h-1 rounded-full bg-secondary"></span>
+                        {% if post.created_at %}
+                        <time>{{ post.created_at }}</time>
+                        {% endif %}
                     </div>
                     
-                    <a href="/blog/{{ post.slug }}" class="text-sm font-medium text-accent hover:underline inline-flex items-center gap-1">
-                        Read more
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                        </svg>
-                    </a>
-                </div>
-            </article>
+                    <h2 class="text-2xl md:text-3xl font-semibold mb-4 group-hover:text-accent transition-colors">
+                        <a href="/blog/{{ post.slug }}">{{ post.title }}</a>
+                    </h2>
+                    
+                    <p class="text-secondary mb-5 max-w-2xl">{{ post.excerpt }}</p>
+                    
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex flex-wrap gap-2">
+                            {% for tag in post.tags %}
+                            <a href="/blog?tag={{ tag }}" 
+                               class="px-2 py-1 text-xs font-medium text-accent bg-accent/10 rounded hover:bg-accent/20 transition-colors">
+                                {{ tag }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        
+                        <a href="/blog/{{ post.slug }}" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-accent text-white hover:bg-accent/90 transition-colors">
+                            Read post
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </a>
+                    </div>
+                </article>
+                {% else %}
+                <!-- Regular list post -->
+                <article class="group pb-8 border-b border-grid last:border-0">
+                    <div class="flex items-center gap-3 text-sm text-secondary mb-3">
+                        <span class="font-mono">{{ post.reading_time }} min read</span>
+                        <span class="w-1 h-1 rounded-full bg-secondary"></span>
+                        {% if post.created_at %}
+                        <time>{{ post.created_at }}</time>
+                        {% endif %}
+                    </div>
+                    
+                    <h2 class="text-xl md:text-2xl font-semibold mb-3 group-hover:text-accent transition-colors">
+                        <a href="/blog/{{ post.slug }}">{{ post.title }}</a>
+                    </h2>
+                    
+                    <p class="text-secondary mb-4">{{ post.excerpt }}</p>
+                    
+                    <div class="flex flex-wrap items-center gap-4">
+                        <div class="flex flex-wrap gap-2">
+                            {% for tag in post.tags %}
+                            <a href="/blog?tag={{ tag }}" 
+                               class="px-2 py-1 text-xs font-medium text-accent bg-accent/10 rounded hover:bg-accent/20 transition-colors">
+                                {{ tag }}
+                            </a>
+                            {% endfor %}
+                        </div>
+                        
+                        <a href="/blog/{{ post.slug }}" class="text-sm font-medium text-accent hover:underline inline-flex items-center gap-1">
+                            Read more
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </a>
+                    </div>
+                </article>
+                {% endif %}
             {% endfor %}
         </div>
-        
+
         {% if posts | length == 0 %}
         <div class="text-center py-20">
             <p class="text-secondary">No posts found.</p>
@@ -62,6 +100,34 @@
             </a>
             {% endif %}
         </div>
+        {% endif %}
+
+        {% if posts | length > 0 and not current_tag %}
+        <nav class="mt-10 flex items-center justify-between text-sm text-secondary">
+            <div>
+                {% if has_prev_page %}
+                    <a
+                        href="/blog?page={{ current_page - 1 }}"
+                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-grid hover:border-brand hover:text-brand transition-colors"
+                    >
+                        <span>Previous</span>
+                    </a>
+                {% endif %}
+            </div>
+            <div class="text-xs md:text-sm">
+                Page {{ current_page }}
+            </div>
+            <div class="text-right">
+                {% if has_next_page %}
+                    <a
+                        href="/blog?page={{ current_page + 1 }}"
+                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-grid hover:border-brand hover:text-brand transition-colors"
+                    >
+                        <span>Next</span>
+                    </a>
+                {% endif %}
+            </div>
+        </nav>
         {% endif %}
     </div>
 </main>

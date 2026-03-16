@@ -1,29 +1,23 @@
-# Build stage - use exact same Debian version as runtime
-FROM debian:bookworm-slim AS builder
+# Build stage - Rust toolchain with minimal extras
+FROM rust:1-slim-bullseye AS builder
 
 RUN apt-get update && apt-get install -y \
-    curl \
     pkg-config \
     libssl-dev \
-    libclang-dev \
-    cmake \
     build-essential \
-    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-ENV PATH="/root/.cargo/bin:${PATH}"
 
 WORKDIR /app
 COPY . .
 
 RUN cargo build --release
 
-# Runtime stage - use exact same Debian version
-FROM debian:bookworm-slim
+# Runtime stage - small Debian image with SSL certs
+FROM debian:bullseye-slim
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \
-    libssl3 \
+    libssl1.1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -40,9 +34,8 @@ USER portfolio
 
 EXPOSE 8080
 
-ENV HOST=0.0.0.0
-ENV PORT=8080
-ENV RUST_LOG=info
-ENV DATABASE_URL=file:///app/data/portfolio.db
+ENV HOST=0.0.0.0 \
+    PORT=8080 \
+    RUST_LOG=info
 
 CMD ["./portfolio"]

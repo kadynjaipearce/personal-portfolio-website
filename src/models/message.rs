@@ -99,4 +99,16 @@ impl Message {
             .await?;
         Ok(row.0)
     }
+
+    pub async fn recent(limit: usize) -> AppResult<Vec<Self>> {
+        let pool = get_pool();
+        let limit = limit as i64;
+        let rows = sqlx::query_as::<_, Self>(
+            "SELECT id, name, email, subject, message, read, created_at FROM messages ORDER BY created_at DESC LIMIT $1",
+        )
+        .bind(limit)
+        .fetch_all(pool)
+        .await?;
+        Ok(rows)
+    }
 }

@@ -59,8 +59,8 @@
     {% if recent_messages | length > 0 %}
     <div class="divide-y divide-grid">
         {% for msg in recent_messages %}
-        <a href="/admin/messages/{{ msg.id }}" class="block px-6 py-4 hover:bg-gray-50 transition-colors">
-            <div class="flex items-start justify-between">
+        <a href="/admin/messages/{{ msg.id }}" class="block px-6 py-4 hover:bg-surface-subtle transition-colors">
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="font-medium">{{ msg.name }}</span>
@@ -68,9 +68,9 @@
                         <span class="w-2 h-2 rounded-full bg-accent"></span>
                         {% endif %}
                     </div>
-                    <p class="text-sm text-secondary">{{ msg.subject }}</p>
+                    <p class="text-sm text-secondary break-words">{{ msg.subject }}</p>
                 </div>
-                <span class="text-xs text-secondary">{{ msg.email }}</span>
+                <span class="text-xs text-secondary sm:text-right break-words">{{ msg.email }}</span>
             </div>
         </a>
         {% endfor %}

@@ -18,32 +18,32 @@
         <div class="flex flex-wrap gap-2 mb-8">
             <a href="/projects"
                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                      {% if not current_category %}bg-primary text-white{% else %}bg-gray-100 hover:bg-gray-200{% endif %}">
+                      {% if not current_category %}bg-primary text-white{% else %}bg-surface-subtle hover:bg-surface{% endif %}">
                 All
             </a>
             <a href="/projects?category=finance"
                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                      {% if current_category == 'finance' %}bg-primary text-white{% else %}bg-gray-100 hover:bg-gray-200{% endif %}">
+                      {% if current_category == 'finance' %}bg-primary text-white{% else %}bg-surface-subtle hover:bg-surface{% endif %}">
                 Finance
             </a>
             <a href="/projects?category=blockchain"
                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                      {% if current_category == 'blockchain' %}bg-primary text-white{% else %}bg-gray-100 hover:bg-gray-200{% endif %}">
+                      {% if current_category == 'blockchain' %}bg-primary text-white{% else %}bg-surface-subtle hover:bg-surface{% endif %}">
                 Blockchain
             </a>
             <a href="/projects?category=ml"
                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                      {% if current_category == 'ml' %}bg-primary text-white{% else %}bg-gray-100 hover:bg-gray-200{% endif %}">
+                      {% if current_category == 'ml' %}bg-primary text-white{% else %}bg-surface-subtle hover:bg-surface{% endif %}">
                 ML/AI
             </a>
             <a href="/projects?category=embedded"
                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                      {% if current_category == 'embedded' %}bg-primary text-white{% else %}bg-gray-100 hover:bg-gray-200{% endif %}">
+                      {% if current_category == 'embedded' %}bg-primary text-white{% else %}bg-surface-subtle hover:bg-surface{% endif %}">
                 Embedded
             </a>
             <a href="/projects?category=backend"
                class="px-4 py-2 text-sm font-medium rounded-lg transition-colors
-                      {% if current_category == 'backend' %}bg-primary text-white{% else %}bg-gray-100 hover:bg-gray-200{% endif %}">
+                      {% if current_category == 'backend' %}bg-primary text-white{% else %}bg-surface-subtle hover:bg-surface{% endif %}">
                 Backend
             </a>
         </div>
@@ -51,18 +51,24 @@
         <!-- Projects Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for project in projects %}
-            <article class="group border border-grid rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300">
+            <article class="group border border-grid rounded-xl p-6 hover:border-primary/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300
+                           {% if loop.index0 == 0 %}md:col-span-2 md:flex md:items-start md:gap-8 md:p-8 bg-white{% endif %}">
                 <div class="flex items-start justify-between mb-4">
                     <div class="flex items-center gap-3">
                         <span class="px-2.5 py-1 text-xs font-medium rounded-full
-                            {% if project.project_type == 'finance' %}bg-emerald-100 text-emerald-700
-                            {% elif project.project_type == 'blockchain' %}bg-purple-100 text-purple-700
-                            {% elif project.project_type == 'ml' %}bg-blue-100 text-blue-700
-                            {% elif project.project_type == 'embedded' %}bg-orange-100 text-orange-700
-                            {% elif project.project_type == 'graphics' %}bg-pink-100 text-pink-700
-                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {% if project.project_type == 'finance' %}bg-brand/10 text-brand
+                            {% elif project.project_type == 'blockchain' %}bg-accentWarm/10 text-accentWarm
+                            {% elif project.project_type == 'ml' %}bg-surface-subtle text-ink
+                            {% elif project.project_type == 'embedded' %}bg-surface-subtle text-ink-muted
+                            {% elif project.project_type == 'graphics' %}bg-surface-subtle text-ink
+                            {% else %}bg-surface-subtle text-ink-muted{% endif %}">
                             {{ project.project_type }}
                         </span>
+                        {% if project.is_featured %}
+                        <span class="ml-2 px-2 py-0.5 text-[11px] font-semibold rounded-full bg-brand/10 text-brand uppercase tracking-wide">
+                            Featured
+                        </span>
+                        {% endif %}
                     </div>
 
                     <div class="flex items-center gap-2">
@@ -85,7 +91,7 @@
 
                 <div class="flex flex-wrap gap-2">
                     {% for tag in project.tags %}
-                    <span class="px-2 py-1 text-xs font-mono bg-gray-100 rounded">{{ tag }}</span>
+                    <span class="px-2 py-1 text-xs font-mono bg-surface-subtle text-ink-muted rounded">{{ tag }}</span>
                     {% endfor %}
                 </div>
             </article>

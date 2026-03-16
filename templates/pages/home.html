@@ -127,14 +127,14 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for project in featured_projects %}
-                <article class="group border border-grid rounded-xl p-6 hover:border-brand/50 hover:shadow-lg transition-all duration-300 min-w-0">
+                <article class="group border border-grid rounded-xl p-6 hover:border-brand/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 min-w-0">
                     <div class="flex items-start justify-between mb-4">
                         <span class="px-2.5 py-1 text-xs font-medium rounded-full
                             {% if project.project_type == 'finance' %}bg-emerald-100 text-emerald-700
                             {% elif project.project_type == 'blockchain' %}bg-purple-100 text-purple-700
                             {% elif project.project_type == 'ml' %}bg-blue-100 text-blue-700
                             {% elif project.project_type == 'embedded' %}bg-orange-100 text-orange-700
-                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {% else %}bg-surface-subtle text-ink-muted{% endif %}">
                             {{ project.project_type }}
                         </span>
                         {% if project.url %}
@@ -155,7 +155,7 @@
                     <div class="flex flex-wrap gap-2">
                         {% for tag in project.tags %}
                         {% if loop.index0 < 4 %}
-                        <span class="px-2 py-1 text-xs font-mono bg-gray-100 rounded max-w-full truncate">{{ tag }}</span>
+                        <span class="px-2 py-1 text-xs font-mono bg-surface-subtle text-ink-muted rounded max-w-full truncate">{{ tag }}</span>
                         {% endif %}
                         {% endfor %}
                     </div>
@@ -211,7 +211,7 @@
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {% for post in recent_posts %}
-                <article class="group border border-grid rounded-xl p-6 hover:border-brand/50 hover:shadow-lg transition-all duration-300 min-w-0">
+                <article class="group border border-grid rounded-xl p-6 hover:border-brand/50 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 min-w-0">
                     <div class="flex items-center gap-2 text-xs text-secondary mb-3">
                         <span>{{ post.reading_time }} min read</span>
                         <span class="w-1 h-1 rounded-full bg-secondary"></span>
@@ -237,19 +237,43 @@
     {% endif %}
     
     <!-- CTA Section -->
-    <section class="py-20 bg-primary text-white">
-        <div class="max-w-4xl mx-auto px-6 text-center">
-            <h2 class="text-2xl md:text-3xl font-bold mb-4">Let's Build Something Together</h2>
-            <p class="text-white/70 mb-8 max-w-2xl mx-auto">
-                I'm always interested in hearing about new projects and opportunities. 
-                Whether you need a high-performance system or just want to chat about technology, feel free to reach out.
-            </p>
-            <a href="/contact" class="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary rounded-lg font-medium hover:bg-gray-100 transition-colors">
-                Get in Touch
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                </svg>
-            </a>
+    <section class="py-20 bg-brand text-white">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] gap-10 items-center">
+                <div class="text-center md:text-left">
+                    <h2 class="text-2xl md:text-3xl font-bold mb-3">Let's Build Something Together</h2>
+                    <p class="text-white/70 mb-4 max-w-xl md:max-w-2xl mx-auto md:mx-0">
+                        Ideal for <span class="font-semibold">trading teams</span>, <span class="font-semibold">infra squads</span>, 
+                        and <span class="font-semibold">early-stage founders</span> who need reliable, Rust-first systems.
+                    </p>
+                    <p class="text-white/70 mb-8 max-w-xl md:max-w-2xl mx-auto md:mx-0">
+                        Bring a short brief, an existing system that needs hardening, or a blank sheet. 
+                        We’ll design and ship something that can handle real production load.
+                    </p>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-4">
+                        <a href="/contact" class="inline-flex items-center gap-2 px-8 py-3 bg-white text-primary rounded-lg font-medium hover:bg-surface-subtle transition-colors">
+                            Start a project
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                            </svg>
+                        </a>
+                        <a href="/projects" class="inline-flex items-center gap-2 px-6 py-3 border border-white/40 rounded-lg font-medium text-white hover:bg-white/10 transition-colors">
+                            View case studies
+                        </a>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="rounded-2xl bg-black/10 border border-white/20 p-6">
+                        <h3 class="text-sm font-semibold uppercase tracking-wide text-white/80 mb-3">What we can do together</h3>
+                        <ul class="space-y-2 text-sm text-white/80">
+                            <li>• Low-latency trading infrastructure and execution engines</li>
+                            <li>• On-chain market data, order routing, and settlement flows</li>
+                            <li>• Rust services on modern cloud platforms (Supabase, Postgres, Next.js frontends)</li>
+                            <li>• Hardening, observability, and performance passes on existing systems</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 </main>

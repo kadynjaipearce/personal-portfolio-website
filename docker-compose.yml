@@ -18,7 +18,7 @@ services:
       - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI:-http://localhost:8080/auth/github/callback}
       - ADMIN_GITHUB_USERNAME=${ADMIN_GITHUB_USERNAME:-kadynjaipearce}
       - SESSION_SECRET=${SESSION_SECRET}
-      - CONTACT_EMAIL=${CONTACT_EMAIL:-kadyn@kadynpearce.dev}
+      - CONTACT_EMAIL=${CONTACT_EMAIL:kadynjaipearce@gmail.com}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-noreply@kadynpearce.dev}
     volumes:

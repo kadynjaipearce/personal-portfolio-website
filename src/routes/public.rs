@@ -60,7 +60,7 @@ async fn home(tmpl: web::Data<Tera>) -> AppResult<HttpResponse> {
     ctx.insert("page_title", "Kadyn Pearce – Software Engineer");
     ctx.insert(
         "page_description",
-        "Rust-first systems engineer building trading, infrastructure, and ML workloads for production.",
+        "Software engineer building infrastructure, and machine learning workloads for production.",
     );
 
     let body = tmpl.render("pages/home.html", &ctx).map_err(|e| {
@@ -138,19 +138,36 @@ async fn project_detail(tmpl: web::Data<Tera>, path: web::Path<String>) -> AppRe
 #[derive(Deserialize)]
 pub struct BlogQuery {
     tag: Option<String>,
+    page: Option<usize>,
 }
 
 async fn blog(tmpl: web::Data<Tera>, query: web::Query<BlogQuery>) -> AppResult<HttpResponse> {
     let mut ctx = Context::new();
 
-    let posts = if let Some(ref tag) = query.tag {
+    let page = query.page.unwrap_or(1).max(1);
+    let per_page: i64 = 10;
+    let offset: i64 = (page as i64 - 1) * per_page;
+
+    let mut posts = if let Some(ref tag) = query.tag {
+        // When filtering by tag, keep existing behaviour (no pagination for now)
         Post::by_tag(tag).await?
     } else {
-        Post::published().await?
+        // Fetch one extra record to detect if there is a next page
+        let limit = per_page + 1;
+        Post::published_page(limit, offset).await?
     };
+
+    let mut has_next_page = false;
+    if query.tag.is_none() && posts.len() as i64 > per_page {
+        posts.truncate(per_page as usize);
+        has_next_page = true;
+    }
 
     ctx.insert("posts", &posts);
     ctx.insert("current_tag", &query.tag);
+    ctx.insert("current_page", &page);
+    ctx.insert("has_prev_page", &(page > 1));
+    ctx.insert("has_next_page", &has_next_page);
     ctx.insert("page_title", "Blog - Kadyn Pearce");
 
     let body = tmpl

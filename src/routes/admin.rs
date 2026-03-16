@@ -18,6 +18,7 @@ pub fn admin_routes(cfg: &mut web::ServiceConfig) {
             .route("/projects", web::get().to(projects_list))
             .route("/projects/new", web::get().to(project_form))
             .route("/projects/new", web::post().to(project_create))
+            .route("/projects/rewrite", web::post().to(project_rewrite_ai))
             .route("/projects/{id}/edit", web::get().to(project_edit))
             .route("/projects/{id}/edit", web::post().to(project_update))
             .route("/projects/{id}/delete", web::post().to(project_delete))
@@ -25,9 +26,11 @@ pub fn admin_routes(cfg: &mut web::ServiceConfig) {
             .route("/posts", web::get().to(posts_list))
             .route("/posts/new", web::get().to(post_form))
             .route("/posts/new", web::post().to(post_create))
+            .route("/posts/rewrite", web::post().to(post_rewrite_ai))
             .route("/posts/{id}/edit", web::get().to(post_edit))
             .route("/posts/{id}/edit", web::post().to(post_update))
             .route("/posts/{id}/delete", web::post().to(post_delete))
+            .route("/posts/{id}/tweet", web::post().to(post_tweet))
             // Experience
             .route("/experience", web::get().to(experience_list))
             .route("/experience/new", web::get().to(experience_form))
@@ -53,7 +56,7 @@ async fn dashboard(tmpl: web::Data<Tera>, user: AdminUser) -> AppResult<HttpResp
     let project_count = Project::count().await.unwrap_or(0);
     let post_count = Post::count().await.unwrap_or(0);
     let unread_messages = Message::count_unread().await.unwrap_or(0);
-    let recent_messages = Message::all().await.unwrap_or_default();
+    let recent_messages = Message::recent(5).await.unwrap_or_default();
 
     ctx.insert("user", &user);
     ctx.insert("project_count", &project_count);
@@ -61,7 +64,7 @@ async fn dashboard(tmpl: web::Data<Tera>, user: AdminUser) -> AppResult<HttpResp
     ctx.insert("unread_messages", &unread_messages);
     ctx.insert(
         "recent_messages",
-        &recent_messages.into_iter().take(5).collect::<Vec<_>>(),
+        &recent_messages,
     );
     ctx.insert("page_title", "Dashboard - Admin");
 
@@ -90,6 +93,22 @@ async fn project_form(tmpl: web::Data<Tera>, user: AdminUser) -> AppResult<HttpR
 
     let body = tmpl.render("admin/projects/form.html", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(body))
+}
+
+#[derive(Deserialize)]
+pub struct ProjectRewriteFormData {
+    pub description: String,
+}
+
+async fn project_rewrite_ai(
+    _user: AdminUser,
+    form: web::Form<ProjectRewriteFormData>,
+) -> AppResult<HttpResponse> {
+    let rewritten = crate::services::openrouter::OpenRouterService::rewrite_markdown(&form.description).await?;
+
+    Ok(HttpResponse::Ok()
+        .content_type("text/plain; charset=utf-8")
+        .body(rewritten))
 }
 
 #[derive(Deserialize)]
@@ -235,6 +254,23 @@ pub struct PostFormData {
     pub published: Option<String>,
 }
 
+#[derive(Deserialize)]
+pub struct RewriteFormData {
+    pub content: String,
+}
+
+async fn post_rewrite_ai(
+    _user: AdminUser,
+    form: web::Form<RewriteFormData>,
+) -> AppResult<HttpResponse> {
+    let rewritten =
+        crate::services::openrouter::OpenRouterService::rewrite_markdown(&form.content).await?;
+
+    Ok(HttpResponse::Ok()
+        .content_type("text/plain; charset=utf-8")
+        .body(rewritten))
+}
+
 async fn post_create(_user: AdminUser, form: web::Form<PostFormData>) -> AppResult<HttpResponse> {
     let tags: Vec<String> = form
         .tags
@@ -251,12 +287,7 @@ async fn post_create(_user: AdminUser, form: web::Form<PostFormData>) -> AppResu
         published: form.published.is_some(),
     };
 
-    let post = Post::create(data).await?;
-    if post.published {
-        if let Err(e) = crate::services::twitter::TwitterService::post_new_blog_post(&post.title, &post.slug).await {
-            tracing::warn!("Twitter post failed: {}", e);
-        }
-    }
+    Post::create(data).await?;
 
     Ok(HttpResponse::Found()
         .insert_header(("Location", "/admin/posts"))
@@ -305,15 +336,7 @@ async fn post_update(
         published: Some(form.published.is_some()),
     };
 
-    let current = Post::by_id(&id)
-        .await?
-        .ok_or_else(|| AppError::NotFound("Post not found".to_string()))?;
-    let updated = Post::update(&id, data).await?;
-    if !current.published && updated.published {
-        if let Err(e) = crate::services::twitter::TwitterService::post_new_blog_post(&updated.title, &updated.slug).await {
-            tracing::warn!("Twitter post failed: {}", e);
-        }
-    }
+    Post::update(&id, data).await?;
 
     Ok(HttpResponse::Found()
         .insert_header(("Location", "/admin/posts"))
@@ -323,6 +346,22 @@ async fn post_update(
 async fn post_delete(_user: AdminUser, path: web::Path<String>) -> AppResult<HttpResponse> {
     let id = path.into_inner();
     Post::delete(&id).await?;
+
+    Ok(HttpResponse::Found()
+        .insert_header(("Location", "/admin/posts"))
+        .finish())
+}
+
+async fn post_tweet(_user: AdminUser, path: web::Path<String>) -> AppResult<HttpResponse> {
+    let id = path.into_inner();
+
+    if let Some(post) = Post::by_id(&id).await? {
+        if post.published {
+            if let Err(e) = crate::services::twitter::TwitterService::post_new_blog_post(&post.title, &post.slug).await {
+                tracing::warn!("Twitter post failed: {}", e);
+            }
+        }
+    }
 
     Ok(HttpResponse::Found()
         .insert_header(("Location", "/admin/posts"))

@@ -62,12 +62,12 @@
             
             <div class="space-y-2">
                 {% for skill in category_skills %}
-                <div class="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between py-2 px-3 bg-surface-subtle rounded-lg">
                     <div class="flex items-center gap-3">
                         <span class="font-medium">{{ skill.name }}</span>
                         <div class="flex gap-1">
                             {% for i in range(end=5) %}
-                            <div class="w-1.5 h-1.5 rounded-full {% if i < skill.proficiency %}bg-accent{% else %}bg-gray-300{% endif %}"></div>
+                            <div class="w-1.5 h-1.5 rounded-full {% if i < skill.proficiency %}bg-accent{% else %}bg-surface-subtle{% endif %}"></div>
                             {% endfor %}
                         </div>
                     </div>
