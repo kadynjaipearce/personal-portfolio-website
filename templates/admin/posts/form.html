@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="max-w-3xl">
-    <form action="{% if post %}/admin/posts/{{ post.id.id.String }}/edit{% else %}/admin/posts/new{% endif %}" method="POST" class="space-y-6">
+    <form action="{% if post %}/admin/posts/{{ post.id }}/edit{% else %}/admin/posts/new{% endif %}" method="POST" class="space-y-6">
         <div class="bg-white rounded-xl border border-grid p-6 space-y-6">
             <div>
                 <label for="title" class="block text-sm font-medium mb-2">Title</label>

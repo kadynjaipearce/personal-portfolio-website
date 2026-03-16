@@ -1,7 +1,10 @@
 use crate::error::{AppError, AppResult};
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use std::sync::RwLock;
+use std::time::{Duration, Instant};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GitHubStats {
     pub public_repos: i32,
     pub followers: i32,
@@ -12,7 +15,7 @@ pub struct GitHubStats {
     pub recent_repos: Vec<RepoInfo>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RepoInfo {
     pub name: String,
     pub description: Option<String>,
@@ -44,10 +47,34 @@ struct GitHubRepo {
     pub fork: bool,
 }
 
+const CACHE_TTL: Duration = Duration::from_secs(24 * 3600);
+
+static CACHE: Lazy<RwLock<Option<(String, GitHubStats, Instant)>>> =
+    Lazy::new(|| RwLock::new(None));
+
 pub struct GitHubService;
 
 impl GitHubService {
+    /// Returns cached stats if present and less than 24h old, otherwise fetches and caches.
     pub async fn get_user_stats(username: &str) -> AppResult<GitHubStats> {
+        let now = Instant::now();
+        {
+            let guard = CACHE.read().map_err(|_| AppError::InternalError("cache lock".into()))?;
+            if let Some((cached_username, ref stats, expires_at)) = guard.as_ref() {
+                if cached_username == username && now < *expires_at {
+                    return Ok(stats.clone());
+                }
+            }
+        }
+        let stats = Self::fetch_user_stats(username).await?;
+        {
+            let mut guard = CACHE.write().map_err(|_| AppError::InternalError("cache lock".into()))?;
+            *guard = Some((username.to_string(), stats.clone(), now + CACHE_TTL));
+        }
+        Ok(stats)
+    }
+
+    async fn fetch_user_stats(username: &str) -> AppResult<GitHubStats> {
         let client = reqwest::Client::new();
 
         // Fetch user info

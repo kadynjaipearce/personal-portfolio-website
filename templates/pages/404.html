@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include "components/nav.html" %}
+
+<main id="main-content" class="pt-24 pb-20">
+    <div class="max-w-2xl mx-auto px-6 text-center">
+        <h1 class="font-display text-4xl md:text-5xl font-bold mb-4">404</h1>
+        <p class="text-xl text-secondary mb-8">This page doesn’t exist or has been moved.</p>
+        <a href="/" class="inline-block font-medium text-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded">Back to home</a>
+    </div>
+</main>
+
+{% include "components/footer.html" %}
+{% endblock %}

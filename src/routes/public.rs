@@ -2,17 +2,19 @@ use crate::error::{AppError, AppResult};
 use crate::models::{CreateMessage, Experience, Message, Post, Project, Skill};
 use crate::services::email::EmailService;
 use crate::services::github::GitHubService;
-use actix_web::{web, HttpResponse};
+use actix_web::{web, HttpRequest, HttpResponse};
 use serde::Deserialize;
 use tera::{Context, Tera};
 use tracing::warn;
+
+const CACHE_PUBLIC_60S: (&str, &str) = ("Cache-Control", "public, max-age=60");
 
 pub fn public_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("")
             .route("/", web::get().to(home))
             .route("/projects", web::get().to(projects))
-            .route("/projects/{slug}", web::get().to(project_detail))
+            .route("/projects/{id}", web::get().to(project_detail))
             .route("/blog", web::get().to(blog))
             .route("/blog/{slug}", web::get().to(post_detail))
             .route("/about", web::get().to(about))
@@ -21,28 +23,55 @@ pub fn public_routes(cfg: &mut web::ServiceConfig) {
     );
 }
 
+pub async fn not_found(req: HttpRequest, tmpl: web::Data<Tera>) -> HttpResponse {
+    let mut ctx = tera::Context::new();
+    ctx.insert("page_title", "Page not found - Kadyn Pearce");
+    ctx.insert("path", req.path());
+
+    let body = tmpl
+        .render("pages/404.html", &ctx)
+        .unwrap_or_else(|_| {
+            r#"<!DOCTYPE html><html><body><h1>404</h1><p>Page not found.</p><a href="/">Home</a></body></html>"#.into()
+        });
+
+    HttpResponse::NotFound()
+        .content_type("text/html")
+        .body(body)
+}
+
 async fn home(tmpl: web::Data<Tera>) -> AppResult<HttpResponse> {
     let mut ctx = Context::new();
 
-    let featured_projects = Project::featured().await.unwrap_or_default();
-    let recent_posts = Post::recent(3).await.unwrap_or_default();
-    let skills = Skill::all().await.unwrap_or_default();
+    let (featured_projects, recent_posts, skills, github_stats) = tokio::join!(
+        Project::featured(),
+        Post::recent(3),
+        Skill::all(),
+        async { GitHubService::get_user_stats("kadynjaipearce").await.ok() },
+    );
 
-    // Try to get GitHub stats
-    let github_stats = GitHubService::get_user_stats("kadynjaipearce").await.ok();
+    let featured_projects = featured_projects.unwrap_or_default();
+    let recent_posts = recent_posts.unwrap_or_default();
+    let skills = skills.unwrap_or_default();
 
     ctx.insert("featured_projects", &featured_projects);
     ctx.insert("recent_posts", &recent_posts);
     ctx.insert("skills", &skills);
     ctx.insert("github_stats", &github_stats);
-    ctx.insert("page_title", "Kadyn Pearce - Software Engineer");
+    ctx.insert("page_title", "Kadyn Pearce – Software Engineer");
+    ctx.insert(
+        "page_description",
+        "Rust-first systems engineer building trading, infrastructure, and ML workloads for production.",
+    );
 
     let body = tmpl.render("pages/home.html", &ctx).map_err(|e| {
         tracing::error!("Template render error: {:?}", e);
         AppError::TemplateError(format!("{:?}", e))
     })?;
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(body))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .insert_header(CACHE_PUBLIC_60S)
+        .body(body))
 }
 
 #[derive(Deserialize)]
@@ -57,7 +86,7 @@ async fn projects(
     let mut ctx = Context::new();
 
     let projects = if let Some(ref cat) = query.category {
-        Project::by_category(cat).await?
+        Project::by_project_type(cat).await?
     } else {
         Project::all().await?
     };
@@ -70,21 +99,23 @@ async fn projects(
         .render("pages/projects.html", &ctx)
         .map_err(|e| AppError::TemplateError(e.to_string()))?;
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(body))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .insert_header(CACHE_PUBLIC_60S)
+        .body(body))
 }
 
 async fn project_detail(tmpl: web::Data<Tera>, path: web::Path<String>) -> AppResult<HttpResponse> {
-    let slug = path.into_inner();
+    let id = path.into_inner();
     let mut ctx = Context::new();
 
-    let project = Project::by_slug(&slug)
+    let project = Project::by_id(&id)
         .await?
-        .ok_or_else(|| AppError::NotFound(format!("Project '{}' not found", slug)))?;
+        .ok_or_else(|| AppError::NotFound("Project not found".to_string()))?;
 
-    // Render markdown content
     let content_html = {
         use pulldown_cmark::{html, Parser};
-        let parser = Parser::new(&project.content);
+        let parser = Parser::new(&project.description);
         let mut html_output = String::new();
         html::push_html(&mut html_output, parser);
         html_output
@@ -92,13 +123,16 @@ async fn project_detail(tmpl: web::Data<Tera>, path: web::Path<String>) -> AppRe
 
     ctx.insert("project", &project);
     ctx.insert("content_html", &content_html);
-    ctx.insert("page_title", &format!("{} - Kadyn Pearce", project.title));
+    ctx.insert("page_title", &format!("{} - Kadyn Pearce", project.name));
 
     let body = tmpl
         .render("pages/project_detail.html", &ctx)
         .map_err(|e| AppError::TemplateError(e.to_string()))?;
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(body))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .insert_header(CACHE_PUBLIC_60S)
+        .body(body))
 }
 
 #[derive(Deserialize)]
@@ -123,7 +157,10 @@ async fn blog(tmpl: web::Data<Tera>, query: web::Query<BlogQuery>) -> AppResult<
         .render("pages/blog.html", &ctx)
         .map_err(|e| AppError::TemplateError(e.to_string()))?;
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(body))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .insert_header(CACHE_PUBLIC_60S)
+        .body(body))
 }
 
 async fn post_detail(tmpl: web::Data<Tera>, path: web::Path<String>) -> AppResult<HttpResponse> {
@@ -144,7 +181,10 @@ async fn post_detail(tmpl: web::Data<Tera>, path: web::Path<String>) -> AppResul
         .render("pages/post.html", &ctx)
         .map_err(|e| AppError::TemplateError(e.to_string()))?;
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(body))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .insert_header(CACHE_PUBLIC_60S)
+        .body(body))
 }
 
 async fn about(tmpl: web::Data<Tera>) -> AppResult<HttpResponse> {
@@ -161,7 +201,10 @@ async fn about(tmpl: web::Data<Tera>) -> AppResult<HttpResponse> {
         .render("pages/about.html", &ctx)
         .map_err(|e| AppError::TemplateError(e.to_string()))?;
 
-    Ok(HttpResponse::Ok().content_type("text/html").body(body))
+    Ok(HttpResponse::Ok()
+        .content_type("text/html")
+        .insert_header(CACHE_PUBLIC_60S)
+        .body(body))
 }
 
 async fn contact(tmpl: web::Data<Tera>) -> AppResult<HttpResponse> {

@@ -3,80 +3,108 @@
 {% block content %}
 {% include "components/nav.html" %}
 
-<main>
+<main id="main-content">
     <!-- Hero Section -->
-    <section class="min-h-screen grid-bg relative">
-        <div class="max-w-6xl mx-auto px-6 pt-32 pb-20">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
+    <section class="min-h-screen relative overflow-hidden bg-surface">
+        <div class="pointer-events-none absolute inset-0 opacity-40">
+            <div class="grid-bg w-full h-full"></div>
+        </div>
+        <div class="relative max-w-6xl mx-auto px-6 pt-28 pb-20">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
                 <!-- Main Content -->
-                <div class="lg:col-span-2 animate-fade-in">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-medium mb-6">
+                <div class="space-y-6 animate-fade-in">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand/5 text-brand text-xs font-medium">
                         <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-                        Available for opportunities
+                        Available for focused collaborations
                     </div>
                     
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                        Hi, I'm Kadyn<span class="text-accent">.</span>
+                    <h1 class="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
+                        Rust-first systems for<br class="hidden md:block" />
+                        trading, infra, and ML<span class="text-brand">.</span>
                     </h1>
                     
-                    <p class="text-xl md:text-2xl text-secondary mb-4">
-                        I build 
-                        <span class="text-primary font-semibold typing-cursor" data-typing='["trading systems", "smart contracts", "ML pipelines", "embedded firmware", "distributed systems"]'></span>
+                    <p class="text-lg md:text-xl text-secondary max-w-xl">
+                        I design and ship high-performance services at the intersection of 
+                        <span class="font-medium text-primary">finance</span>, 
+                        <span class="font-medium text-primary">blockchain</span>, and 
+                        <span class="font-medium text-primary">machine learning</span>.
+                    </p>
+
+                    <p class="text-sm text-secondary">
+                        Currently exploring
+                        <span class="text-primary font-semibold typing-cursor" data-typing='["low-latency trading engines", "on-chain market infrastructure", "Rust ML pipelines", "distributed backtesting systems"]'></span>
                     </p>
                     
-                    <p class="text-secondary max-w-xl mb-8">
-                        Software engineer specializing in high-performance systems. I work at the intersection of 
-                        <span class="text-primary font-medium">finance</span>, 
-                        <span class="text-primary font-medium">blockchain</span>, and 
-                        <span class="text-primary font-medium">machine learning</span>.
-                    </p>
-                    
-                    <div class="flex flex-wrap gap-4">
-                        <a href="/projects" class="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">
-                            View Projects
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="flex flex-wrap items-center gap-4 pt-2">
+                        <a href="/projects" class="inline-flex items-center gap-2 px-6 py-3 bg-brand text-white rounded-lg font-medium hover:bg-brand.dark transition-colors focus-visible:ring-2 focus-visible:ring-accentWarm focus-visible:ring-offset-2">
+                            View systems work
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                             </svg>
                         </a>
-                        <a href="/blog" class="inline-flex items-center gap-2 px-6 py-3 border border-grid rounded-lg font-medium hover:border-primary transition-colors">
-                            Read Blog
+                        <a href="/blog" class="inline-flex items-center gap-2 px-6 py-3 border border-grid rounded-lg font-medium text-primary hover:border-brand hover:text-brand transition-colors focus-visible:ring-2 focus-visible:ring-accentWarm focus-visible:ring-offset-2">
+                            Read engineering notes
+                        </a>
+                        <a href="/contact" class="inline-flex items-center gap-2 text-sm font-medium text-secondary hover:text-primary">
+                            Or send a short brief →
                         </a>
                     </div>
                 </div>
                 
-                <!-- Stats Card -->
-                <div class="bg-white border border-grid rounded-xl p-6 shadow-sm animate-slide-up">
-                    <h3 class="text-xs font-semibold text-secondary uppercase tracking-wider mb-4">Quick Stats</h3>
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between py-3 border-b border-grid">
-                            <span class="text-sm text-secondary">Projects</span>
-                            <span class="font-mono font-semibold counter" data-counter="{{ featured_projects | length | default(value=6) }}">0</span>
+                <!-- Systems Panel -->
+                <aside class="lg:pl-6 animate-slide-up">
+                    <div class="rounded-2xl border border-grid bg-white/80 backdrop-blur-sm shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 border-b border-grid flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
+                                <span class="text-xs font-medium text-secondary uppercase tracking-wide">KadynPearce / systems</span>
+                            </div>
+                            <span class="text-xs text-secondary">Rust · Postgres · Supabase</span>
                         </div>
-                        {% if github_stats %}
-                        <div class="flex items-center justify-between py-3 border-b border-grid">
-                            <span class="text-sm text-secondary">Repositories</span>
-                            <span class="font-mono font-semibold counter" data-counter="{{ github_stats.public_repos }}">0</span>
-                        </div>
-                        <div class="flex items-center justify-between py-3 border-b border-grid">
-                            <span class="text-sm text-secondary">GitHub Stars</span>
-                            <span class="font-mono font-semibold counter" data-counter="{{ github_stats.total_stars }}">0</span>
-                        </div>
-                        {% endif %}
-                        <div class="flex items-center justify-between py-3">
-                            <span class="text-sm text-secondary">Articles</span>
-                            <span class="font-mono font-semibold counter" data-counter="{{ recent_posts | length | default(value=4) }}">0</span>
+                        <div class="p-5 space-y-4 text-sm">
+                            <div class="grid grid-cols-3 gap-3">
+                                <div class="rounded-lg border border-surface.subtle bg-surface px-3 py-2">
+                                    <div class="text-xs text-secondary mb-1">Latency target</div>
+                                    <div class="font-mono text-sm text-primary">\<1ms</div>
+                                </div>
+                                <div class="rounded-lg border border-surface.subtle bg-surface px-3 py-2">
+                                    <div class="text-xs text-secondary mb-1">Reliability</div>
+                                    <div class="font-mono text-sm text-primary">99.9%</div>
+                                </div>
+                                <div class="rounded-lg border border-surface.subtle bg-surface px-3 py-2">
+                                    <div class="text-xs text-secondary mb-1">Regions</div>
+                                    <div class="font-mono text-sm text-primary">APAC · US</div>
+                                </div>
+                            </div>
+
+                            <div class="border border-surface.subtle rounded-lg bg-surface px-3 py-2">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-xs text-secondary">Example topology</span>
+                                    <span class="text-xs font-mono text-secondary">rust · actix</span>
+                                </div>
+                                <pre class="mt-1 text-xs leading-relaxed overflow-x-auto"><code>Client ─▶ Edge proxy ─▶ Actix services
+     └─▶ Rust workers ─▶ Supabase/Postgres</code></pre>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-1">
+                                <div class="flex items-center gap-3 text-xs text-secondary">
+                                    <span class="inline-flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        Live prod workloads
+                                    </span>
+                                    {% if github_stats %}
+                                    <span class="inline-flex items-center gap-1">
+                                        ⭐ <span class="font-mono counter" data-counter="{{ github_stats.total_stars }}">0</span> repo stars
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <a href="https://github.com/kadynjaipearce" target="_blank" rel="noopener" class="text-xs font-medium text-brand hover:text-brand.light">
+                                    View GitHub →
+                                </a>
+                            </div>
                         </div>
                     </div>
-                    
-                    <a href="https://github.com/kadynjaipearce" target="_blank" rel="noopener" 
-                       class="mt-6 flex items-center justify-center gap-2 w-full py-2.5 border border-grid rounded-lg text-sm font-medium hover:border-primary transition-colors">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                            <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
-                        </svg>
-                        View GitHub Profile
-                    </a>
-                </div>
+                </aside>
             </div>
         </div>
     </section>
@@ -86,7 +114,7 @@
         <div class="max-w-6xl mx-auto px-6">
             <div class="flex items-end justify-between mb-12">
                 <div>
-                    <h2 class="text-2xl md:text-3xl font-bold mb-2">Featured Projects</h2>
+                    <h2 class="font-display text-2xl md:text-3xl font-bold mb-2">Featured projects</h2>
                     <p class="text-secondary">Some of my recent work</p>
                 </div>
                 <a href="/projects" class="hidden md:inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline">
@@ -99,34 +127,36 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for project in featured_projects %}
-                <article class="group border border-grid rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300">
+                <article class="group border border-grid rounded-xl p-6 hover:border-brand/50 hover:shadow-lg transition-all duration-300 min-w-0">
                     <div class="flex items-start justify-between mb-4">
-                        <span class="px-2.5 py-1 text-xs font-medium rounded-full 
-                            {% if project.category == 'finance' %}bg-emerald-100 text-emerald-700
-                            {% elif project.category == 'blockchain' %}bg-purple-100 text-purple-700
-                            {% elif project.category == 'ml' %}bg-blue-100 text-blue-700
-                            {% elif project.category == 'embedded' %}bg-orange-100 text-orange-700
+                        <span class="px-2.5 py-1 text-xs font-medium rounded-full
+                            {% if project.project_type == 'finance' %}bg-emerald-100 text-emerald-700
+                            {% elif project.project_type == 'blockchain' %}bg-purple-100 text-purple-700
+                            {% elif project.project_type == 'ml' %}bg-blue-100 text-blue-700
+                            {% elif project.project_type == 'embedded' %}bg-orange-100 text-orange-700
                             {% else %}bg-gray-100 text-gray-700{% endif %}">
-                            {{ project.category }}
+                            {{ project.project_type }}
                         </span>
-                        {% if project.github_url %}
-                        <a href="{{ project.github_url }}" target="_blank" rel="noopener" class="text-secondary hover:text-primary transition-colors">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
+                        {% if project.url %}
+                        <a href="{{ project.url }}" target="_blank" rel="noopener" class="text-secondary hover:text-primary transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                             </svg>
                         </a>
                         {% endif %}
                     </div>
-                    
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-accent transition-colors">
-                        <a href="/projects/{{ project.slug }}">{{ project.title }}</a>
+
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-brand transition-colors">
+                        <a href="/projects/{{ project.id }}">{{ project.name }}</a>
                     </h3>
-                    
-                    <p class="text-sm text-secondary mb-4 line-clamp-2">{{ project.description }}</p>
-                    
+
+                    <p class="text-sm text-secondary mb-4 line-clamp-2 break-words">{{ project.description }}</p>
+
                     <div class="flex flex-wrap gap-2">
-                        {% for tech in project.tech_stack | slice(end=4) %}
-                        <span class="px-2 py-1 text-xs font-mono bg-gray-100 rounded">{{ tech }}</span>
+                        {% for tag in project.tags %}
+                        {% if loop.index0 < 4 %}
+                        <span class="px-2 py-1 text-xs font-mono bg-gray-100 rounded max-w-full truncate">{{ tag }}</span>
+                        {% endif %}
                         {% endfor %}
                     </div>
                 </article>
@@ -181,18 +211,18 @@
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {% for post in recent_posts %}
-                <article class="group border border-grid rounded-xl p-6 hover:border-primary/50 hover:shadow-lg transition-all duration-300">
+                <article class="group border border-grid rounded-xl p-6 hover:border-brand/50 hover:shadow-lg transition-all duration-300 min-w-0">
                     <div class="flex items-center gap-2 text-xs text-secondary mb-3">
                         <span>{{ post.reading_time }} min read</span>
                         <span class="w-1 h-1 rounded-full bg-secondary"></span>
                         <span>{{ post.created_at | default(value="Recently") }}</span>
                     </div>
                     
-                    <h3 class="text-lg font-semibold mb-2 group-hover:text-accent transition-colors">
+                    <h3 class="text-lg font-semibold mb-2 group-hover:text-brand transition-colors">
                         <a href="/blog/{{ post.slug }}">{{ post.title }}</a>
                     </h3>
                     
-                    <p class="text-sm text-secondary mb-4 line-clamp-2">{{ post.excerpt }}</p>
+                    <p class="text-sm text-secondary mb-4 line-clamp-2 break-words">{{ post.excerpt }}</p>
                     
                     <div class="flex flex-wrap gap-2">
                         {% for tag in post.tags | slice(end=3) %}

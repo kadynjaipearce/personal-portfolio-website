@@ -94,39 +94,42 @@ async fn project_form(tmpl: web::Data<Tera>, user: AdminUser) -> AppResult<HttpR
 
 #[derive(Deserialize)]
 pub struct ProjectFormData {
-    pub title: String,
+    pub name: String,
+    pub company: Option<String>,
     pub description: String,
-    pub content: String,
-    pub category: String,
-    pub tech_stack: String,
-    pub github_url: Option<String>,
-    pub live_url: Option<String>,
-    pub featured: Option<String>,
-    pub status: String,
+    pub project_type: String,
+    pub url: Option<String>,
+    pub site_image_url: Option<String>,
+    pub client_image_url: Option<String>,
+    pub tags: String,
+    pub stars: Option<String>,
+    pub sort_order: Option<String>,
+    pub is_featured: Option<String>,
 }
 
 async fn project_create(
     _user: AdminUser,
     form: web::Form<ProjectFormData>,
 ) -> AppResult<HttpResponse> {
-    let tech_stack: Vec<String> = form
-        .tech_stack
+    let tags: Vec<String> = form
+        .tags
         .split(',')
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
 
     let data = CreateProject {
-        title: form.title.clone(),
+        name: form.name.clone(),
+        company: form.company.clone().filter(|s| !s.is_empty()),
         description: form.description.clone(),
-        content: form.content.clone(),
-        category: form.category.clone(),
-        tech_stack,
-        github_url: form.github_url.clone().filter(|s| !s.is_empty()),
-        live_url: form.live_url.clone().filter(|s| !s.is_empty()),
-        image_url: None,
-        featured: form.featured.is_some(),
-        status: form.status.clone(),
+        project_type: form.project_type.clone(),
+        url: form.url.clone().filter(|s| !s.is_empty()),
+        site_image_url: form.site_image_url.clone().filter(|s| !s.is_empty()),
+        client_image_url: form.client_image_url.clone().filter(|s| !s.is_empty()),
+        tags,
+        stars: form.stars.clone().and_then(|s| s.parse().ok()).unwrap_or(0),
+        sort_order: form.sort_order.clone().and_then(|s| s.parse().ok()).unwrap_or(0),
+        is_featured: form.is_featured.is_some(),
     };
 
     Project::create(data).await?;
@@ -150,7 +153,7 @@ async fn project_edit(
 
     ctx.insert("user", &user);
     ctx.insert("project", &Some(&project));
-    ctx.insert("page_title", &format!("Edit {} - Admin", project.title));
+    ctx.insert("page_title", &format!("Edit {} - Admin", project.name));
 
     let body = tmpl.render("admin/projects/form.html", &ctx)?;
     Ok(HttpResponse::Ok().content_type("text/html").body(body))
@@ -163,24 +166,25 @@ async fn project_update(
 ) -> AppResult<HttpResponse> {
     let id = path.into_inner();
 
-    let tech_stack: Vec<String> = form
-        .tech_stack
+    let tags: Vec<String> = form
+        .tags
         .split(',')
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .collect();
 
     let data = UpdateProject {
-        title: Some(form.title.clone()),
+        name: Some(form.name.clone()),
+        company: form.company.clone(),
         description: Some(form.description.clone()),
-        content: Some(form.content.clone()),
-        category: Some(form.category.clone()),
-        tech_stack: Some(tech_stack),
-        github_url: form.github_url.clone(),
-        live_url: form.live_url.clone(),
-        image_url: None,
-        featured: Some(form.featured.is_some()),
-        status: Some(form.status.clone()),
+        project_type: Some(form.project_type.clone()),
+        url: form.url.clone(),
+        site_image_url: form.site_image_url.clone(),
+        client_image_url: form.client_image_url.clone(),
+        tags: Some(tags),
+        stars: form.stars.clone().and_then(|s| s.parse().ok()),
+        sort_order: form.sort_order.clone().and_then(|s| s.parse().ok()),
+        is_featured: Some(form.is_featured.is_some()),
     };
 
     Project::update(&id, data).await?;
@@ -247,7 +251,12 @@ async fn post_create(_user: AdminUser, form: web::Form<PostFormData>) -> AppResu
         published: form.published.is_some(),
     };
 
-    Post::create(data).await?;
+    let post = Post::create(data).await?;
+    if post.published {
+        if let Err(e) = crate::services::twitter::TwitterService::post_new_blog_post(&post.title, &post.slug).await {
+            tracing::warn!("Twitter post failed: {}", e);
+        }
+    }
 
     Ok(HttpResponse::Found()
         .insert_header(("Location", "/admin/posts"))
@@ -296,7 +305,15 @@ async fn post_update(
         published: Some(form.published.is_some()),
     };
 
-    Post::update(&id, data).await?;
+    let current = Post::by_id(&id)
+        .await?
+        .ok_or_else(|| AppError::NotFound("Post not found".to_string()))?;
+    let updated = Post::update(&id, data).await?;
+    if !current.published && updated.published {
+        if let Err(e) = crate::services::twitter::TwitterService::post_new_blog_post(&updated.title, &updated.slug).await {
+            tracing::warn!("Twitter post failed: {}", e);
+        }
+    }
 
     Ok(HttpResponse::Found()
         .insert_header(("Location", "/admin/posts"))

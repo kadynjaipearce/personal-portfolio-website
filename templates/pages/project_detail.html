@@ -3,7 +3,7 @@
 {% block content %}
 {% include "components/nav.html" %}
 
-<main class="pt-24 pb-20">
+<main id="main-content" class="pt-24 pb-20">
     <article class="max-w-4xl mx-auto px-6">
         <!-- Breadcrumb -->
         <nav class="mb-8">
@@ -12,67 +12,57 @@
                 <li>/</li>
                 <li><a href="/projects" class="hover:text-primary">Projects</a></li>
                 <li>/</li>
-                <li class="text-primary">{{ project.title }}</li>
+                <li class="text-primary">{{ project.name }}</li>
             </ol>
         </nav>
-        
+
         <!-- Header -->
         <header class="mb-12">
             <div class="flex flex-wrap items-center gap-3 mb-4">
-                <span class="px-3 py-1 text-sm font-medium rounded-full 
-                    {% if project.category == 'finance' %}bg-emerald-100 text-emerald-700
-                    {% elif project.category == 'blockchain' %}bg-purple-100 text-purple-700
-                    {% elif project.category == 'ml' %}bg-blue-100 text-blue-700
-                    {% elif project.category == 'embedded' %}bg-orange-100 text-orange-700
-                    {% elif project.category == 'graphics' %}bg-pink-100 text-pink-700
+                <span class="px-3 py-1 text-sm font-medium rounded-full
+                    {% if project.project_type == 'finance' %}bg-emerald-100 text-emerald-700
+                    {% elif project.project_type == 'blockchain' %}bg-purple-100 text-purple-700
+                    {% elif project.project_type == 'ml' %}bg-blue-100 text-blue-700
+                    {% elif project.project_type == 'embedded' %}bg-orange-100 text-orange-700
+                    {% elif project.project_type == 'graphics' %}bg-pink-100 text-pink-700
                     {% else %}bg-gray-100 text-gray-700{% endif %}">
-                    {{ project.category }}
+                    {{ project.project_type }}
                 </span>
-                {% if project.status == 'active' %}
-                <span class="flex items-center gap-1 text-sm text-success">
-                    <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
-                    Active Development
-                </span>
+                {% if project.company %}
+                <span class="text-sm text-secondary">{{ project.company }}</span>
                 {% endif %}
             </div>
-            
-            <h1 class="text-3xl md:text-4xl font-bold mb-4">{{ project.title }}</h1>
+
+            <h1 class="font-display text-3xl md:text-4xl font-bold mb-4">{{ project.name }}</h1>
             <p class="text-xl text-secondary mb-6">{{ project.description }}</p>
-            
-            <!-- Actions -->
+
+            <!-- Action -->
+            {% if project.url %}
             <div class="flex flex-wrap gap-4">
-                {% if project.github_url %}
-                <a href="{{ project.github_url }}" target="_blank" rel="noopener" 
-                   class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
-                    </svg>
-                    View Source
-                </a>
-                {% endif %}
-                {% if project.live_url %}
-                <a href="{{ project.live_url }}" target="_blank" rel="noopener" 
+                <a href="{{ project.url }}" target="_blank" rel="noopener"
                    class="inline-flex items-center gap-2 px-4 py-2 border border-grid rounded-lg font-medium hover:border-primary transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
                     </svg>
-                    Live Demo
+                    View Project
                 </a>
-                {% endif %}
             </div>
+            {% endif %}
         </header>
-        
-        <!-- Tech Stack -->
+
+        <!-- Tags -->
+        {% if project.tags | length > 0 %}
         <div class="mb-12 p-6 bg-gray-50 rounded-xl">
             <h3 class="text-sm font-semibold text-secondary uppercase tracking-wider mb-4">Tech Stack</h3>
             <div class="flex flex-wrap gap-2">
-                {% for tech in project.tech_stack %}
-                <span class="px-3 py-1.5 bg-white border border-grid rounded-lg text-sm font-mono">{{ tech }}</span>
+                {% for tag in project.tags %}
+                <span class="px-3 py-1.5 bg-white border border-grid rounded-lg text-sm font-mono">{{ tag }}</span>
                 {% endfor %}
             </div>
         </div>
-        
-        <!-- Content -->
+        {% endif %}
+
+        <!-- Content (description rendered as Markdown) -->
         <div class="prose prose-lg max-w-none
                     prose-headings:font-bold prose-headings:text-primary
                     prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4
@@ -86,7 +76,7 @@
                     prose-pre:bg-[#1a1a1a] prose-pre:text-gray-200">
             {{ content_html | safe }}
         </div>
-        
+
         <!-- Back Link -->
         <div class="mt-16 pt-8 border-t border-grid">
             <a href="/projects" class="inline-flex items-center gap-2 text-secondary hover:text-primary transition-colors">

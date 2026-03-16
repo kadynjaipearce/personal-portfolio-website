@@ -4,89 +4,98 @@
 
 {% block content %}
 <div class="max-w-3xl">
-    <form action="{% if project %}/admin/projects/{{ project.id.id.String }}/edit{% else %}/admin/projects/new{% endif %}" method="POST" class="space-y-6">
+    <form action="{% if project %}/admin/projects/{{ project.id }}/edit{% else %}/admin/projects/new{% endif %}" method="POST" class="space-y-6">
         <div class="bg-white rounded-xl border border-grid p-6 space-y-6">
             <div>
-                <label for="title" class="block text-sm font-medium mb-2">Title</label>
-                <input type="text" id="title" name="title" required
-                       value="{% if project %}{{ project.title }}{% endif %}"
+                <label for="name" class="block text-sm font-medium mb-2">Name</label>
+                <input type="text" id="name" name="name" required
+                       value="{% if project %}{{ project.name }}{% endif %}"
                        class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                       placeholder="Project title">
+                       placeholder="Project name">
             </div>
-            
+
             <div>
-                <label for="description" class="block text-sm font-medium mb-2">Short Description</label>
-                <textarea id="description" name="description" rows="2" required
+                <label for="company" class="block text-sm font-medium mb-2">Company (optional)</label>
+                <input type="text" id="company" name="company"
+                       value="{% if project %}{{ project.company | default(value='') }}{% endif %}"
+                       class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                       placeholder="Company or client">
+            </div>
+
+            <div>
+                <label for="description" class="block text-sm font-medium mb-2">Description</label>
+                <textarea id="description" name="description" rows="4" required
                           class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent resize-none"
-                          placeholder="Brief description for cards">{% if project %}{{ project.description }}{% endif %}</textarea>
+                          placeholder="Project description (Markdown supported)">{% if project %}{{ project.description }}{% endif %}</textarea>
             </div>
-            
+
             <div>
-                <label for="content" class="block text-sm font-medium mb-2">Content (Markdown)</label>
-                <textarea id="content" name="content" rows="15" required
-                          class="w-full px-4 py-2 border border-grid rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                          placeholder="# Project Overview&#10;&#10;Detailed description in markdown...">{% if project %}{{ project.content }}{% endif %}</textarea>
+                <label for="project_type" class="block text-sm font-medium mb-2">Project Type</label>
+                <select id="project_type" name="project_type" required
+                        class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+                    <option value="backend" {% if project and project.project_type == 'backend' %}selected{% endif %}>Backend</option>
+                    <option value="finance" {% if project and project.project_type == 'finance' %}selected{% endif %}>Finance</option>
+                    <option value="blockchain" {% if project and project.project_type == 'blockchain' %}selected{% endif %}>Blockchain</option>
+                    <option value="ml" {% if project and project.project_type == 'ml' %}selected{% endif %}>ML/AI</option>
+                    <option value="embedded" {% if project and project.project_type == 'embedded' %}selected{% endif %}>Embedded</option>
+                    <option value="graphics" {% if project and project.project_type == 'graphics' %}selected{% endif %}>Graphics</option>
+                </select>
             </div>
-            
+
+            <div>
+                <label for="url" class="block text-sm font-medium mb-2">URL (optional)</label>
+                <input type="url" id="url" name="url"
+                       value="{% if project %}{{ project.url | default(value='') }}{% endif %}"
+                       class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                       placeholder="https://...">
+            </div>
+
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="category" class="block text-sm font-medium mb-2">Category</label>
-                    <select id="category" name="category" required
-                            class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
-                        <option value="backend" {% if project and project.category == 'backend' %}selected{% endif %}>Backend</option>
-                        <option value="finance" {% if project and project.category == 'finance' %}selected{% endif %}>Finance</option>
-                        <option value="blockchain" {% if project and project.category == 'blockchain' %}selected{% endif %}>Blockchain</option>
-                        <option value="ml" {% if project and project.category == 'ml' %}selected{% endif %}>ML/AI</option>
-                        <option value="embedded" {% if project and project.category == 'embedded' %}selected{% endif %}>Embedded</option>
-                        <option value="graphics" {% if project and project.category == 'graphics' %}selected{% endif %}>Graphics</option>
-                    </select>
+                    <label for="site_image_url" class="block text-sm font-medium mb-2">Site image URL (optional)</label>
+                    <input type="url" id="site_image_url" name="site_image_url"
+                           value="{% if project %}{{ project.site_image_url | default(value='') }}{% endif %}"
+                           class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                 </div>
-                
                 <div>
-                    <label for="status" class="block text-sm font-medium mb-2">Status</label>
-                    <select id="status" name="status" required
-                            class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
-                        <option value="completed" {% if project and project.status == 'completed' %}selected{% endif %}>Completed</option>
-                        <option value="active" {% if project and project.status == 'active' %}selected{% endif %}>Active</option>
-                        <option value="archived" {% if project and project.status == 'archived' %}selected{% endif %}>Archived</option>
-                    </select>
+                    <label for="client_image_url" class="block text-sm font-medium mb-2">Client image URL (optional)</label>
+                    <input type="url" id="client_image_url" name="client_image_url"
+                           value="{% if project %}{{ project.client_image_url | default(value='') }}{% endif %}"
+                           class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                 </div>
             </div>
-            
+
             <div>
-                <label for="tech_stack" class="block text-sm font-medium mb-2">Tech Stack (comma-separated)</label>
-                <input type="text" id="tech_stack" name="tech_stack" required
-                       value="{% if project %}{{ project.tech_stack | join(sep=', ') }}{% endif %}"
+                <label for="tags" class="block text-sm font-medium mb-2">Tags (comma-separated)</label>
+                <input type="text" id="tags" name="tags"
+                       value="{% if project %}{{ project.tags | join(sep=', ') }}{% endif %}"
                        class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
                        placeholder="Rust, Tokio, PostgreSQL">
             </div>
-            
+
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label for="github_url" class="block text-sm font-medium mb-2">GitHub URL (optional)</label>
-                    <input type="url" id="github_url" name="github_url"
-                           value="{% if project %}{{ project.github_url | default(value='') }}{% endif %}"
-                           class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                           placeholder="https://github.com/...">
+                    <label for="stars" class="block text-sm font-medium mb-2">Stars</label>
+                    <input type="number" id="stars" name="stars" min="0" max="5" step="1"
+                           value="{% if project %}{{ project.stars }}{% else %}0{% endif %}"
+                           class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                 </div>
-                
                 <div>
-                    <label for="live_url" class="block text-sm font-medium mb-2">Live URL (optional)</label>
-                    <input type="url" id="live_url" name="live_url"
-                           value="{% if project %}{{ project.live_url | default(value='') }}{% endif %}"
-                           class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-                           placeholder="https://...">
+                    <label for="sort_order" class="block text-sm font-medium mb-2">Sort order</label>
+                    <input type="number" id="sort_order" name="sort_order" min="0"
+                           value="{% if project %}{{ project.sort_order }}{% else %}0{% endif %}"
+                           class="w-full px-4 py-2 border border-grid rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                 </div>
             </div>
-            
+
             <div class="flex items-center gap-3">
-                <input type="checkbox" id="featured" name="featured" value="true"
-                       {% if project and project.featured %}checked{% endif %}
+                <input type="checkbox" id="is_featured" name="is_featured" value="true"
+                       {% if project and project.is_featured %}checked{% endif %}
                        class="w-4 h-4 text-accent border-grid rounded focus:ring-accent">
-                <label for="featured" class="text-sm font-medium">Featured project (shown on homepage)</label>
+                <label for="is_featured" class="text-sm font-medium">Featured (shown on homepage)</label>
             </div>
         </div>
-        
+
         <div class="flex items-center gap-4">
             <button type="submit" class="px-6 py-2 bg-accent text-white rounded-lg font-medium hover:bg-accent/90 transition-colors">
                 {% if project %}Update Project{% else %}Create Project{% endif %}

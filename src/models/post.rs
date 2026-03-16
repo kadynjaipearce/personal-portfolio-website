@@ -1,12 +1,13 @@
-use crate::db::get_db;
+use crate::db::get_pool;
 use crate::error::{AppError, AppResult};
 use pulldown_cmark::{html, Parser};
 use serde::{Deserialize, Serialize};
-use surrealdb::sql::Thing;
+use sqlx::FromRow;
+use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Post {
-    pub id: Option<Thing>,
+    pub id: Option<Uuid>,
     pub title: String,
     pub slug: String,
     pub excerpt: String,
@@ -14,8 +15,8 @@ pub struct Post {
     pub tags: Vec<String>,
     pub published: bool,
     pub reading_time: i32,
-    pub created_at: Option<String>,
-    pub updated_at: Option<String>,
+    pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub updated_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -50,145 +51,163 @@ impl Post {
     }
 
     pub async fn all() -> AppResult<Vec<Self>> {
-        let db = get_db();
-        let posts: Vec<Self> = db
-            .query("SELECT * FROM posts ORDER BY created_at DESC")
-            .await?
-            .take(0)?;
-        Ok(posts)
+        let pool = get_pool();
+        let rows = sqlx::query_as::<_, Self>(
+            "SELECT id, title, slug, excerpt, content, tags, published, reading_time, created_at, updated_at FROM posts ORDER BY created_at DESC",
+        )
+        .fetch_all(pool)
+        .await?;
+        Ok(rows)
     }
 
     pub async fn published() -> AppResult<Vec<Self>> {
-        let db = get_db();
-        let posts: Vec<Self> = db
-            .query("SELECT * FROM posts WHERE published = true ORDER BY created_at DESC")
-            .await?
-            .take(0)?;
-        Ok(posts)
+        let pool = get_pool();
+        let rows = sqlx::query_as::<_, Self>(
+            "SELECT id, title, slug, excerpt, content, tags, published, reading_time, created_at, updated_at FROM posts WHERE published = true ORDER BY created_at DESC",
+        )
+        .fetch_all(pool)
+        .await?;
+        Ok(rows)
     }
 
     pub async fn by_tag(tag: &str) -> AppResult<Vec<Self>> {
-        let db = get_db();
-        let posts: Vec<Self> = db
-            .query("SELECT * FROM posts WHERE $tag IN tags AND published = true ORDER BY created_at DESC")
-            .bind(("tag", tag.to_string()))
-            .await?
-            .take(0)?;
-        Ok(posts)
+        let pool = get_pool();
+        let rows = sqlx::query_as::<_, Self>(
+            "SELECT id, title, slug, excerpt, content, tags, published, reading_time, created_at, updated_at FROM posts WHERE $1 = ANY(tags) AND published = true ORDER BY created_at DESC",
+        )
+        .bind(tag)
+        .fetch_all(pool)
+        .await?;
+        Ok(rows)
     }
 
     pub async fn by_slug(slug: &str) -> AppResult<Option<Self>> {
-        let db = get_db();
-        let posts: Vec<Self> = db
-            .query("SELECT * FROM posts WHERE slug = $slug LIMIT 1")
-            .bind(("slug", slug.to_string()))
-            .await?
-            .take(0)?;
-        Ok(posts.into_iter().next())
+        let pool = get_pool();
+        let row = sqlx::query_as::<_, Self>(
+            "SELECT id, title, slug, excerpt, content, tags, published, reading_time, created_at, updated_at FROM posts WHERE slug = $1 LIMIT 1",
+        )
+        .bind(slug)
+        .fetch_optional(pool)
+        .await?;
+        Ok(row)
     }
 
     pub async fn by_id(id: &str) -> AppResult<Option<Self>> {
-        let db = get_db();
-        let post: Option<Self> = db.select(("posts", id)).await?;
-        Ok(post)
+        let id = Uuid::parse_str(id)?;
+        let pool = get_pool();
+        let row = sqlx::query_as::<_, Self>(
+            "SELECT id, title, slug, excerpt, content, tags, published, reading_time, created_at, updated_at FROM posts WHERE id = $1",
+        )
+        .bind(id)
+        .fetch_optional(pool)
+        .await?;
+        Ok(row)
     }
 
     pub async fn recent(limit: usize) -> AppResult<Vec<Self>> {
-        let db = get_db();
-        let posts: Vec<Self> = db
-            .query(
-                "SELECT * FROM posts WHERE published = true ORDER BY created_at DESC LIMIT $limit",
-            )
-            .bind(("limit", limit as i64))
-            .await?
-            .take(0)?;
-        Ok(posts)
+        let pool = get_pool();
+        let limit = limit as i64;
+        let rows = sqlx::query_as::<_, Self>(
+            "SELECT id, title, slug, excerpt, content, tags, published, reading_time, created_at, updated_at FROM posts WHERE published = true ORDER BY created_at DESC LIMIT $1",
+        )
+        .bind(limit)
+        .fetch_all(pool)
+        .await?;
+        Ok(rows)
     }
 
     pub async fn create(data: CreatePost) -> AppResult<Self> {
-        let db = get_db();
         let slug = slug::slugify(&data.title);
         let reading_time = Self::calculate_reading_time(&data.content);
+        let pool = get_pool();
 
-        let post = Post {
-            id: None,
-            title: data.title,
-            slug,
-            excerpt: data.excerpt,
-            content: data.content,
-            tags: data.tags,
-            published: data.published,
-            reading_time,
-            created_at: None,
-            updated_at: None,
-        };
-
-        let created: Option<Self> = db.create("posts").content(post).await?;
-        created.ok_or_else(|| AppError::DatabaseError("Failed to create post".to_string()))
+        let row = sqlx::query_as::<_, Self>(
+            r#"
+            INSERT INTO posts (title, slug, excerpt, content, tags, published, reading_time)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, title, slug, excerpt, content, tags, published, reading_time, created_at, updated_at
+            "#,
+        )
+        .bind(&data.title)
+        .bind(&slug)
+        .bind(&data.excerpt)
+        .bind(&data.content)
+        .bind(&data.tags)
+        .bind(data.published)
+        .bind(reading_time)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+        Ok(row)
     }
 
     pub async fn update(id: &str, data: UpdatePost) -> AppResult<Self> {
-        let db = get_db();
+        let id = Uuid::parse_str(id)?;
+        let pool = get_pool();
 
-        let mut updates = vec!["updated_at = time::now()".to_string()];
+        let current = Self::by_id(&id.to_string())
+            .await?
+            .ok_or_else(|| AppError::NotFound("Post not found".to_string()))?;
 
-        if let Some(title) = &data.title {
-            updates.push(format!("title = '{}'", title.replace('\'', "''")));
-            updates.push(format!("slug = '{}'", slug::slugify(title)));
-        }
-        if let Some(excerpt) = &data.excerpt {
-            updates.push(format!("excerpt = '{}'", excerpt.replace('\'', "''")));
-        }
-        if let Some(content) = &data.content {
-            updates.push(format!("content = '{}'", content.replace('\'', "''")));
-            updates.push(format!(
-                "reading_time = {}",
-                Self::calculate_reading_time(content)
-            ));
-        }
-        if let Some(published) = data.published {
-            updates.push(format!("published = {}", published));
-        }
+        let title = data.title.as_deref().unwrap_or(&current.title);
+        let slug = slug::slugify(title);
+        let excerpt = data.excerpt.as_deref().unwrap_or(&current.excerpt);
+        let content = data.content.as_deref().unwrap_or(&current.content);
+        let tags = data.tags.as_ref().unwrap_or(&current.tags);
+        let published = data.published.unwrap_or(current.published);
+        let reading_time = data
+            .content
+            .as_ref()
+            .map(|c| Self::calculate_reading_time(c))
+            .unwrap_or(current.reading_time);
 
-        let query = format!(
-            "UPDATE posts:{} SET {} RETURN AFTER",
-            id,
-            updates.join(", ")
-        );
+        let row = sqlx::query_as::<_, Self>(
+            r#"
+            UPDATE posts SET title = $1, slug = $2, excerpt = $3, content = $4, tags = $5, published = $6, reading_time = $7, updated_at = now()
+            WHERE id = $8
+            RETURNING id, title, slug, excerpt, content, tags, published, reading_time, created_at, updated_at
+            "#,
+        )
+        .bind(title)
+        .bind(slug)
+        .bind(excerpt)
+        .bind(content)
+        .bind(tags)
+        .bind(published)
+        .bind(reading_time)
+        .bind(id)
+        .fetch_optional(pool)
+        .await?;
 
-        let result: Vec<Self> = db.query(&query).await?.take(0)?;
-        result
-            .into_iter()
-            .next()
-            .ok_or_else(|| AppError::NotFound("Post not found".to_string()))
+        row.ok_or_else(|| AppError::NotFound("Post not found".to_string()))
     }
 
     pub async fn delete(id: &str) -> AppResult<()> {
-        let db = get_db();
-        let _: Option<Self> = db.delete(("posts", id)).await?;
+        let id = Uuid::parse_str(id)?;
+        let pool = get_pool();
+        let result = sqlx::query("DELETE FROM posts WHERE id = $1")
+            .bind(id)
+            .execute(pool)
+            .await?;
+        if result.rows_affected() == 0 {
+            return Err(AppError::NotFound("Post not found".to_string()));
+        }
         Ok(())
     }
 
     pub async fn count() -> AppResult<i64> {
-        let db = get_db();
-        let result: Vec<CountResult> = db
-            .query("SELECT count() as count FROM posts GROUP ALL")
-            .await?
-            .take(0)?;
-        Ok(result.first().map(|r| r.count).unwrap_or(0))
+        let pool = get_pool();
+        let row: (i64,) = sqlx::query_as("SELECT count(*) FROM posts")
+            .fetch_one(pool)
+            .await?;
+        Ok(row.0)
     }
 
     pub async fn count_published() -> AppResult<i64> {
-        let db = get_db();
-        let result: Vec<CountResult> = db
-            .query("SELECT count() as count FROM posts WHERE published = true GROUP ALL")
-            .await?
-            .take(0)?;
-        Ok(result.first().map(|r| r.count).unwrap_or(0))
+        let pool = get_pool();
+        let row: (i64,) = sqlx::query_as("SELECT count(*) FROM posts WHERE published = true")
+            .fetch_one(pool)
+            .await?;
+        Ok(row.0)
     }
-}
-
-#[derive(Debug, Deserialize)]
-struct CountResult {
-    count: i64,
 }

@@ -1,11 +1,12 @@
-use crate::db::get_db;
+use crate::db::get_pool;
 use crate::error::{AppError, AppResult};
 use serde::{Deserialize, Serialize};
-use surrealdb::sql::Thing;
+use sqlx::FromRow;
+use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct Skill {
-    pub id: Option<Thing>,
+    pub id: Option<Uuid>,
     pub name: String,
     pub category: String,
     pub icon: Option<String>,
@@ -22,22 +23,13 @@ pub struct CreateSkill {
 
 impl Skill {
     pub async fn all() -> AppResult<Vec<Self>> {
-        let db = get_db();
-        let skills: Vec<Self> = db
-            .query("SELECT * FROM skills ORDER BY category, proficiency DESC")
-            .await?
-            .take(0)?;
-        Ok(skills)
-    }
-
-    pub async fn by_category(category: &str) -> AppResult<Vec<Self>> {
-        let db = get_db();
-        let skills: Vec<Self> = db
-            .query("SELECT * FROM skills WHERE category = $category ORDER BY proficiency DESC")
-            .bind(("category", category.to_string()))
-            .await?
-            .take(0)?;
-        Ok(skills)
+        let pool = get_pool();
+        let rows = sqlx::query_as::<_, Self>(
+            "SELECT id, name, category, icon, proficiency FROM skills ORDER BY category, proficiency DESC",
+        )
+        .fetch_all(pool)
+        .await?;
+        Ok(rows)
     }
 
     pub async fn grouped() -> AppResult<std::collections::HashMap<String, Vec<Self>>> {
@@ -55,30 +47,36 @@ impl Skill {
         Ok(grouped)
     }
 
-    pub async fn by_id(id: &str) -> AppResult<Option<Self>> {
-        let db = get_db();
-        let skill: Option<Self> = db.select(("skills", id)).await?;
-        Ok(skill)
-    }
-
     pub async fn create(data: CreateSkill) -> AppResult<Self> {
-        let db = get_db();
+        let pool = get_pool();
 
-        let skill = Skill {
-            id: None,
-            name: data.name,
-            category: data.category,
-            icon: data.icon,
-            proficiency: data.proficiency,
-        };
-
-        let created: Option<Self> = db.create("skills").content(skill).await?;
-        created.ok_or_else(|| AppError::DatabaseError("Failed to create skill".to_string()))
+        let row = sqlx::query_as::<_, Self>(
+            r#"
+            INSERT INTO skills (name, category, icon, proficiency)
+            VALUES ($1, $2, $3, $4)
+            RETURNING id, name, category, icon, proficiency
+            "#,
+        )
+        .bind(&data.name)
+        .bind(&data.category)
+        .bind(&data.icon)
+        .bind(data.proficiency)
+        .fetch_one(pool)
+        .await
+        .map_err(|e| AppError::DatabaseError(e.to_string()))?;
+        Ok(row)
     }
 
     pub async fn delete(id: &str) -> AppResult<()> {
-        let db = get_db();
-        let _: Option<Self> = db.delete(("skills", id)).await?;
+        let id = Uuid::parse_str(id)?;
+        let pool = get_pool();
+        let result = sqlx::query("DELETE FROM skills WHERE id = $1")
+            .bind(id)
+            .execute(pool)
+            .await?;
+        if result.rows_affected() == 0 {
+            return Err(AppError::NotFound("Skill not found".to_string()));
+        }
         Ok(())
     }
 }

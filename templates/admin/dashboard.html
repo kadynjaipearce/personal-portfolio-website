@@ -59,7 +59,7 @@
     {% if recent_messages | length > 0 %}
     <div class="divide-y divide-grid">
         {% for msg in recent_messages %}
-        <a href="/admin/messages/{{ msg.id.id.String }}" class="block px-6 py-4 hover:bg-gray-50 transition-colors">
+        <a href="/admin/messages/{{ msg.id }}" class="block px-6 py-4 hover:bg-gray-50 transition-colors">
             <div class="flex items-start justify-between">
                 <div>
                     <div class="flex items-center gap-2">

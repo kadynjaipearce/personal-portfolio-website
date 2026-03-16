@@ -14,9 +14,8 @@
     <table class="w-full">
         <thead class="bg-gray-50 border-b border-grid">
             <tr>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">Title</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">Category</th>
-                <th class="px-6 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">Name</th>
+                <th class="px-6 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">Type</th>
                 <th class="px-6 py-3 text-left text-xs font-semibold text-secondary uppercase tracking-wider">Featured</th>
                 <th class="px-6 py-3 text-right text-xs font-semibold text-secondary uppercase tracking-wider">Actions</th>
             </tr>
@@ -25,30 +24,20 @@
             {% for project in projects %}
             <tr class="hover:bg-gray-50">
                 <td class="px-6 py-4">
-                    <a href="/projects/{{ project.slug }}" target="_blank" class="font-medium hover:text-accent">{{ project.title }}</a>
+                    <a href="/projects/{{ project.id }}" target="_blank" class="font-medium hover:text-accent">{{ project.name }}</a>
                 </td>
                 <td class="px-6 py-4">
-                    <span class="px-2 py-1 text-xs font-medium rounded-full 
-                        {% if project.category == 'finance' %}bg-emerald-100 text-emerald-700
-                        {% elif project.category == 'blockchain' %}bg-purple-100 text-purple-700
-                        {% elif project.category == 'ml' %}bg-blue-100 text-blue-700
-                        {% elif project.category == 'embedded' %}bg-orange-100 text-orange-700
+                    <span class="px-2 py-1 text-xs font-medium rounded-full
+                        {% if project.project_type == 'finance' %}bg-emerald-100 text-emerald-700
+                        {% elif project.project_type == 'blockchain' %}bg-purple-100 text-purple-700
+                        {% elif project.project_type == 'ml' %}bg-blue-100 text-blue-700
+                        {% elif project.project_type == 'embedded' %}bg-orange-100 text-orange-700
                         {% else %}bg-gray-100 text-gray-700{% endif %}">
-                        {{ project.category }}
+                        {{ project.project_type }}
                     </span>
                 </td>
                 <td class="px-6 py-4">
-                    {% if project.status == 'active' %}
-                    <span class="flex items-center gap-1 text-sm text-success">
-                        <span class="w-1.5 h-1.5 rounded-full bg-success"></span>
-                        Active
-                    </span>
-                    {% else %}
-                    <span class="text-sm text-secondary">{{ project.status }}</span>
-                    {% endif %}
-                </td>
-                <td class="px-6 py-4">
-                    {% if project.featured %}
+                    {% if project.is_featured %}
                     <svg class="w-5 h-5 text-accent" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
                     </svg>
@@ -56,12 +45,12 @@
                 </td>
                 <td class="px-6 py-4 text-right">
                     <div class="flex items-center justify-end gap-2">
-                        <a href="/admin/projects/{{ project.id.id.String }}/edit" class="p-2 text-secondary hover:text-primary transition-colors">
+                        <a href="/admin/projects/{{ project.id }}/edit" class="p-2 text-secondary hover:text-primary transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                             </svg>
                         </a>
-                        <form action="/admin/projects/{{ project.id.id.String }}/delete" method="POST" 
+                        <form action="/admin/projects/{{ project.id }}/delete" method="POST"
                               onsubmit="return confirm('Are you sure you want to delete this project?')">
                             <button type="submit" class="p-2 text-red-500 hover:text-red-700 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +64,7 @@
             {% endfor %}
         </tbody>
     </table>
-    
+
     {% if projects | length == 0 %}
     <div class="px-6 py-12 text-center text-secondary">
         No projects yet. <a href="/admin/projects/new" class="text-accent hover:underline">Create your first project</a>

@@ -15,8 +15,8 @@ actix-rt = "2"
 # Async runtime
 tokio = { version = "1", features = ["full"] }
 
-# Database
-surrealdb = { version = "2", features = ["kv-rocksdb"] }
+# Database (Supabase / PostgreSQL)
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "uuid", "chrono"] }
 
 # Templating
 tera = "1"

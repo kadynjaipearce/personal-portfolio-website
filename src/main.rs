@@ -56,8 +56,10 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::admin_routes)
             // Static files
             .service(Files::new("/static", "static").show_files_listing())
-            // Public routes (must be last due to catch-all patterns)
+            // Public routes
             .configure(routes::public_routes)
+            // 404 for any unmatched path
+            .default_service(web::to(routes::not_found))
     })
     .bind(CONFIG.server_addr())?
     .run()

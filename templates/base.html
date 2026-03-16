@@ -3,44 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ page_title | default(value="Kadyn Pearce") }}</title>
-    <meta name="description" content="Software Engineer specializing in Rust, C++, blockchain, and machine learning. Building high-performance systems.">
+    <title>{{ page_title | default(value="Kadyn Pearce – Rust Systems Engineer") }}</title>
+    <meta name="description" content="{{ page_description | default(value='Rust-first systems engineer building trading, infra, and ML services for production workloads.') }}">
     <meta name="author" content="Kadyn Pearce">
-    <link rel="canonical" href="https://kadynpearce.dev">
+    <link rel="canonical" href="{{ canonical_url | default(value='https://kadynpearce.dev') }}">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="{{ page_title | default(value='Kadyn Pearce - Software Engineer') }}">
-    <meta property="og:description" content="Software Engineer specializing in Rust, C++, blockchain, and machine learning.">
+    <meta property="og:title" content="{{ page_title | default(value='Kadyn Pearce – Rust Systems Engineer') }}">
+    <meta property="og:description" content="{{ page_description | default(value='Rust-first systems engineer building trading, infra, and ML services for production workloads.') }}">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kadynpearce.dev">
+    <meta property="og:url" content="{{ canonical_url | default(value='https://kadynpearce.dev') }}">
     
-    <!-- Fonts -->
+    <!-- Fonts: DM Sans (body) + Outfit (display) + JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS via CDN -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
+                        sans: ['DM Sans', 'system-ui', 'sans-serif'],
+                        display: ['Outfit', 'DM Sans', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
                     },
                     colors: {
-                        primary: '#0A0A0A',
-                        secondary: '#6B7280',
-                        accent: '#2563EB',
-                        success: '#10B981',
+                        // Brand palette – forest green
+                        brand: {
+                            DEFAULT: '#14532D',
+                            dark: '#052E16',
+                            light: '#22C55E',
+                        },
+                        accentWarm: {
+                            DEFAULT: '#EA580C', // warm amber for highlights
+                            soft: '#FDBA74',
+                        },
+                        surface: {
+                            DEFAULT: '#F9FAFB',
+                            subtle: '#F3F4F6',
+                        },
+                        ink: {
+                            DEFAULT: '#020617',
+                            muted: '#4B5563',
+                        },
+                        primary: '#020617',
+                        secondary: '#4B5563',
+                        accent: '#14532D',
+                        success: '#16A34A',
                         grid: '#E5E7EB',
                     },
                     animation: {
                         'blink': 'blink 1s step-end infinite',
-                        'fade-in': 'fadeIn 0.5s ease-out',
-                        'slide-up': 'slideUp 0.5s ease-out',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
                     },
                     keyframes: {
                         blink: {
@@ -52,7 +72,7 @@
                             '100%': { opacity: '1' },
                         },
                         slideUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '0%': { opacity: '0', transform: 'translateY(16px)' },
                             '100%': { opacity: '1', transform: 'translateY(0)' },
                         },
                     },
@@ -63,39 +83,53 @@
     
     <!-- Custom Styles -->
     <style>
-        /* Grid background pattern */
+        /* Grid background */
         .grid-bg {
-            background-image: 
+            background-image:
                 linear-gradient(to right, #E5E7EB 1px, transparent 1px),
                 linear-gradient(to bottom, #E5E7EB 1px, transparent 1px);
             background-size: 40px 40px;
+            background-position: 0 0;
+            transition: background-position 600ms cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .grid-bg:hover {
+            background-position: 6px 6px;
         }
         
-        /* Typing cursor */
+        /* Typing cursor – respect reduced motion */
         .typing-cursor::after {
             content: '|';
             animation: blink 1s step-end infinite;
-            color: #2563EB;
+            color: #14532D;
             font-weight: 400;
         }
+        @media (prefers-reduced-motion: reduce) {
+            .typing-cursor::after { animation: none; opacity: 1; }
+            .animate-fade-in, .animate-slide-up { animation: none !important; opacity: 1; transform: none; }
+            .grid-bg { transition: none; background-position: 0 0; }
+        }
         
-        /* Code block styling */
+        /* Smooth scroll – off when reduced motion */
+        html { scroll-behavior: smooth; }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+        }
+        
+        /* Focus visible: keyboard-only ring (no outline removal without replacement) */
+        :focus-visible {
+            outline: 2px solid #14532D;
+            outline-offset: 2px;
+        }
+        
+        /* Code */
         pre {
             background: #1a1a1a;
             border-radius: 8px;
             padding: 1rem;
             overflow-x: auto;
         }
-        
-        code {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.875rem;
-        }
-        
-        pre code {
-            color: #e5e7eb;
-        }
-        
+        code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 0.875rem; }
+        pre code { color: #e5e7eb; }
         :not(pre) > code {
             background: #f3f4f6;
             padding: 0.125rem 0.375rem;
@@ -103,30 +137,44 @@
             font-size: 0.875em;
         }
         
-        /* Smooth scrolling */
-        html {
-            scroll-behavior: smooth;
-        }
+        ::selection { background: #14532D; color: white; }
+        .counter { font-variant-numeric: tabular-nums; }
         
-        /* Selection color */
-        ::selection {
-            background: #2563EB;
-            color: white;
-        }
+        /* Headings: balance for fewer widows */
+        h1, h2, h3 { text-wrap: balance; }
         
-        /* Number counter animation */
-        .counter {
-            font-variant-numeric: tabular-nums;
+        /* Touch */
+        a, button { touch-action: manipulation; }
+        @supports (-webkit-tap-highlight-color: transparent) {
+            a, button { -webkit-tap-highlight-color: rgba(20, 83, 45, 0.2); }
         }
+        /* Scroll margin for anchor targets */
+        [id] { scroll-margin-top: 6rem; }
     </style>
     
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Kadyn Pearce",
+      "url": "https://kadynpearce.dev",
+      "jobTitle": "Software Engineer",
+      "sameAs": [
+        "https://github.com/kadynjaipearce"
+      ]
+    }
+    </script>
+
     <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
     
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="font-sans text-primary bg-white antialiased">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-accent focus:text-white focus:rounded-lg">
+        Skip to main content
+    </a>
     {% block content %}{% endblock %}
     
     <!-- Typing animation script -->
