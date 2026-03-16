@@ -2,7 +2,7 @@ services:
   portfolio:
     build:
       context: .
-      dockerfile: Dockerfile.simplified
+      dockerfile: Dockerfile
     container_name: portfolio
     ports:
       - "8080"
@@ -10,17 +10,18 @@ services:
       - HOST=0.0.0.0
       - PORT=8080
       - RUST_LOG=info
-      - DATABASE_URL=file:///app/data/portfolio.db
-      - DATABASE_NS=portfolio
-      - DATABASE_DB=main
+      - DATABASE_URL=${DATABASE_URL}
       - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
-      - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI:-http://localhost:8080/auth/github/callback}
-      - ADMIN_GITHUB_USERNAME=${ADMIN_GITHUB_USERNAME:-kadynjaipearce}
+      - GITHUB_REDIRECT_URI=${GITHUB_REDIRECT_URI}
+      - ADMIN_GITHUB_USERNAME=${ADMIN_GITHUB_USERNAME}
       - SESSION_SECRET=${SESSION_SECRET}
-      - CONTACT_EMAIL=${CONTACT_EMAIL:kadynjaipearce@gmail.com}
+      - CONTACT_EMAIL=${CONTACT_EMAIL}
       - RESEND_API_KEY=${RESEND_API_KEY}
-      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-noreply@kadynpearce.dev}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL}
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL}
     volumes:
       - portfolio_data:/app/data
     restart: unless-stopped
